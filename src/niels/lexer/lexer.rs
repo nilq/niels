@@ -32,7 +32,7 @@ impl<'l> Lexer<'l> {
 
         lexer
             .matchers
-            .push(Rc::new(KeyMatcher::new(Keyword, &["funk", "pub"])));
+            .push(Rc::new(KeyMatcher::new(Keyword, &["funk", "pub", "return"])));
 
         lexer
             .matchers
