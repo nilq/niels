@@ -2,6 +2,7 @@ use super::*;
 use Response::Wrong;
 
 use std::rc::Rc;
+use std::collections::HashMap;
 
 pub struct Parser<'p> {
     index: usize,
@@ -318,7 +319,52 @@ impl<'p> Parser<'p> {
 
                 Bool => Expression::new(ExpressionNode::Bool(self.eat()? == "true"), position),
 
+                Operator => match self.current_lexeme().as_str() {
+                    "-" => {
+                        self.next()?;
+
+                        Expression::new(
+                            ExpressionNode::Neg(
+                                Rc::new(self.parse_expression()?)
+                            ),
+
+                            self.span_from(position)
+                        )
+                    },
+
+                    "not" => {
+                        self.next()?;
+
+                        Expression::new(
+                            ExpressionNode::Not(
+                                Rc::new(self.parse_expression()?)
+                            ),
+
+                            self.span_from(position)
+                        )
+                    },
+
+                    ref symbol => return Err(
+                        response!(
+                            Wrong(format!("unexpected operator `{}`", symbol)),
+                            self.source.file,
+                            self.current_position()
+                        )
+                    )
+                },
+
                 Symbol => match self.current_lexeme().as_str() {
+                    "{" => {
+                        let body = self.parse_block_of(("{", "}"), &Self::_parse_definition_comma)?;
+
+                        let content: HashMap<_, _> = body.into_iter().collect();
+
+                        Expression::new(
+                            ExpressionNode::Record(content),
+                            position
+                        )
+                    },
+
                     "[" => Expression::new(
                         ExpressionNode::Array(self.parse_block_of(("[", "]"), &Self::_parse_expression_comma)?),
                         self.span_from(position)
@@ -405,7 +451,23 @@ impl<'p> Parser<'p> {
                     );
 
                     self.parse_postfix(index)
-                }
+                },
+
+                "." => {
+                    self.next()?;
+                    self.expect_type(TokenType::Identifier)?;
+
+                    let position = expression.pos.clone();
+
+                    let ident = Expression::new(ExpressionNode::Identifier(self.eat()?), position.clone());
+
+                    let index = Expression::new(
+                        ExpressionNode::Index(Rc::new(expression), Rc::new(ident), false),
+                        self.span_from(position)
+                    );
+
+                    self.parse_postfix(index)
+                },
 
                 _ => Ok(expression),
             },
@@ -525,6 +587,48 @@ impl<'p> Parser<'p> {
         } else {
             Ok(Vec::new())
         }
+    }
+
+    fn _parse_definition_comma(self: &mut Self) -> Result<Option<(String, Expression)>, ()> {
+        if self.remaining() > 0 && self.current_lexeme() == "\n" {
+            self.next()?
+        }
+
+        if self.remaining() == 0 {
+            return Ok(None)
+        }
+
+        let position = self.current_position();
+
+        let name = self.eat_type(&TokenType::Identifier)?;
+        
+        self.eat_lexeme(":")?;
+
+        let mut value = self.parse_expression()?;
+
+        value.pos = position;
+
+        let param = Some((name, value));
+
+        if self.remaining() > 0 {
+            if ![",", "\n"].contains(&self.current_lexeme().as_str()) {
+                return Err(
+                    response!(
+                        Wrong(format!("expected `,` or newline, found `{}`", self.current_lexeme())),
+                        self.source.file,
+                        self.current_position()
+                    )
+                )
+            } else {
+                self.next()?
+            }
+
+            if self.remaining() > 0 && self.current_lexeme() == "\n" {
+                self.next()?
+            }
+        }
+
+        Ok(param)
     }
 
     fn _parse_name_comma(self: &mut Self) -> Result<Option<String>, ()> {

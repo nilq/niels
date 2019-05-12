@@ -336,7 +336,13 @@ impl<'t> Matcher<'t> for NumberLiteralMatcher {
         }
 
         while !tokenizer.end() {
-            let current = tokenizer.peek().unwrap();
+            let mut current = tokenizer.peek().unwrap();
+
+            if current == '_' {
+                tokenizer.next();
+                current = tokenizer.peek().unwrap()
+            }
+
             if !current.is_whitespace() && current.is_digit(10) || current == '.' {
                 if current == '.' && accum.contains('.') {
                     let pos = tokenizer.pos;

@@ -1,5 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
+use std::collections::HashMap;
 
 use super::*;
 
@@ -36,9 +37,13 @@ pub enum ExpressionNode {
     Char(char),
     Bool(bool),
 
+    Neg(Rc<Expression>),
+    Not(Rc<Expression>),
+
     Identifier(String),
     Binary(Rc<Expression>, Operator, Rc<Expression>),
     Array(Vec<Expression>),
+    Record(HashMap<String, Expression>),
     Index(Rc<Expression>, Rc<Expression>, bool), // whether_index_is_an_array_index: bool
 
     Call(Rc<Expression>, Vec<Expression>),

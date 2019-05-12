@@ -1,5 +1,7 @@
 extern crate colored;
 
+extern crate nanbox;
+
 mod niels;
 
 use niels::lexer::*;
@@ -10,6 +12,18 @@ fn main() {
     let content = r#"
 pub funk foo:
   hello = 10
+
+  a = hello + fff
+
+  b = {
+    y: 100
+    bax: 200
+  }
+
+  x = 10_000
+  x += b.bax
+
+  return r"hey\n\n\n"
 
 funk bar(a, b):
   return [a, b]
