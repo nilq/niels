@@ -7,8 +7,9 @@ mod niels;
 use niels::lexer::*;
 use niels::parser::*;
 use niels::source::*;
+use niels::interpreter::*;
 
-fn main() {
+fn test_parser() {
     let content = r#"
 pub funk foo:
   hello = 10
@@ -25,8 +26,7 @@ pub funk foo:
 
   return r"hey\n\n\n"
 
-funk bar(a, b):
-  return [a, b]
+funk bar(a, b): return [a, b]
 
 foo()
 bar(1, 2 + 10)
@@ -57,4 +57,19 @@ bar(1, 2 + 10)
 
         _ => return,
     }
+}
+
+fn main() {
+    use OpCode::*;
+
+    let mut vm = VirtualMachine::new();
+    let program = [LoadInt(100), LoadInt(2), LoadArray(2), LoadIndex(0)];
+
+    for code in &program {
+        vm.execute_op(code)
+    }
+
+    println!("{:#?}", vm.stack);
+    println!();
+    println!("{:#?}", vm.heap);
 }

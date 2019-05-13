@@ -1,20 +1,17 @@
-use super::Value;
-
 #[derive(Clone, PartialEq, Debug)]
-pub enum Opcode {
+pub enum OpCode {
     LoadInt(i32),
     LoadFloat(f64),
     LoadChar(char),
     LoadString(String),
     LoadBool(bool),
-    LoadLocal(u32)
-    LoadArray,
+    LoadLocal(u32),
+    LoadArray(u32),
     LoadIndex(u32),
 
     Call(u32),
 
     SetLocal(u32),
-    SetArray,
     SetIndex(u32),
 
     Jmp(u32),
