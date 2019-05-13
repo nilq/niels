@@ -9,19 +9,20 @@ pub enum OpCode {
     LoadArray(u32),
     LoadIndex(u32),
 
+    Deref,
+
+    PushFrame,
+    PopFrame,
+
     Call(u32),
+    Ret,
 
     SetLocal(u32),
     SetIndex(u32),
 
     Jmp(u32),
     JmpIf(u32),
-    JmpUnless(u32),
 
-    Ret,
-
-    MakeArray(u32),
-    
     Add,
     Sub,
     Mul,

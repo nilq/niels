@@ -1,5 +1,4 @@
 extern crate colored;
-
 extern crate nanbox;
 
 mod niels;
@@ -63,13 +62,41 @@ fn main() {
     use OpCode::*;
 
     let mut vm = VirtualMachine::new();
-    let program = [LoadInt(100), LoadInt(2), LoadArray(2), LoadIndex(0)];
+    let program = [
+        // a = 10
+        LoadInt(10),
+        SetLocal(0),
 
-    for code in &program {
-        vm.execute_op(code)
-    }
+        // b = bob(a)
+        LoadLocal(0),
+        Call(6),
+
+        SetLocal(1),
+        LoadLocal(1),
+
+
+        // == function part of the program ==
+        Jmp(16), // .. jumping past it
+
+        PushFrame,
+        // bob(a)
+        // declare local a
+        SetLocal(0), // notice cool local scope B-)
+
+        // return a * 2 + 10
+        LoadInt(2),
+        LoadLocal(0),
+        Mul,
+        LoadInt(10),
+        Add,
+
+        PopFrame,
+
+        Ret
+    ];
+
+    vm.execute(&program);
 
     println!("{:#?}", vm.stack);
-    println!();
     println!("{:#?}", vm.heap);
 }
